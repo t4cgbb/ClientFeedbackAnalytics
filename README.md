@@ -1,1 +1,13 @@
-# ClientFeedbackAnalytics
+# Google客戶評論分析與整理
+
+使用技術:
+
+－利用wordcloud模組從文本數據生成文字雲
+
+－使用pandas進行條件過濾、數據分組和合併操作，對數據進行分析與處理
+
+－使用Django作為後端框架，並實現前後端分離
+
+－使用MySQL作為數據庫管理系統，用於存儲和管理客戶評論及分析結果的數據
+
+－使用Element UI，基於Vue.js的前端UI工具套件，進行網站的布局和設計
