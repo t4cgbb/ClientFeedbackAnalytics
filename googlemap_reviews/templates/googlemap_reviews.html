@@ -20,7 +20,7 @@
     <!-- <el-button type="primary" @click="search">查詢資料</el-button> -->
   </el-col>
   <el-col :span="8">
-    <el-button type="primary">匯出xlsx檔</el-button>
+    <el-button type="primary">更新數據</el-button>
   </el-col>
 </el-row>
 <!-- 上方統計數字 -->
@@ -282,8 +282,8 @@
         .then(function(response){
           console.log('statistic_card:',response.data)
           // curRating.value = response.data.curRating
-          newPositiveReviewsThisMonth.value = response.data.totalPositiveReviews
-          newNegativeReviewsThisMonth.value = response.data.totalNegativeReviews
+          newPositiveReviewsThisMonth.value = response.data.newPositiveReviewsThisMonth
+          newNegativeReviewsThisMonth.value = response.data.newNegativeReviewsThisMonth
         })
         }
 
