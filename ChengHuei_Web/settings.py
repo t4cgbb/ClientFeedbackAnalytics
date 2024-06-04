@@ -77,10 +77,10 @@ WSGI_APPLICATION = 'ChengHuei_Web.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "google_reviews",
+        "NAME": "zeabur",
         "USER": "root",
-        "PASSWORD": "90652713",
-        "HOST": "127.0.0.1",
+        "PASSWORD": "056nSJ3HQB8LFjl7dxV4I2EOGyZ9T1vX",
+        "HOST": "mysql.zeabur.internal",
         "PORT": "3306",
     }
 }
