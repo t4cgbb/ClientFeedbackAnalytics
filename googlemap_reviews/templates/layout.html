@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 匯入 Vue 3 與 ElementUI來進行使用 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css" />
+    <!-- 黑暗模式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/theme-chalk/dark/css-vars.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+    <!-- 圖表 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 時間套件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+    <!-- 增加Icon -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
+    <!-- 與後端請求使用 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+    <title>店家評論分析</title>
+</head>
+
+<body>
+
+    <div id="app">
+        <el-container>
+            <el-aside width="200px">
+                <!-- 側欄位 -->
+                <el-row class="tac">
+                    <el-col :span="24">
+                        <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen"
+                            @close="handleClose">
+                            <el-sub-menu index="1">
+                                <template #title>
+                                    <el-icon>
+                                        <Service />
+                                    </el-icon>
+                                    <span>客訴分析</span>
+                                </template>
+                                <el-menu-item index="1-1">各店評論</el-menu-item>
+                                <el-menu-item index="1-2">全台總覽</el-menu-item>
+                            </el-sub-menu>
+                            <el-sub-menu index="2">
+                                <template #title>
+                                    <el-icon>
+                                        <User />
+                                    </el-icon>
+                                    <span>人力資源</span>
+                                </template>
+                                <el-menu-item index="2-1">人力流動率</el-menu-item>
+                                <el-menu-item index="2-2">應徵狀況</el-menu-item>
+                            </el-sub-menu>
+                            <el-sub-menu index="3">
+                                <template #title>
+                                    <el-icon>
+                                        <User />
+                                    </el-icon>
+                                    <span>物料管理</span>
+                                </template>
+                                <el-menu-item index="3-1">各店菜量</el-menu-item>
+                                <el-menu-item index="3-2">全台總覽</el-menu-item>
+                            </el-sub-menu>
+                            <el-menu-item index="4">
+                                <el-icon><icon-menu /></el-icon>
+                                <span>回首頁</span>
+                            </el-menu-item>
+                        </el-menu>
+                    </el-col>
+                </el-row>
+            </el-aside>
+            <el-container>
+                <el-header>
+                    <!-- header -->
+                </el-header>
+                <el-main v-loading="ReviewData1Loading">
+                    <!-- main -->
+                    {% block main %}{% endblock %}
+                </el-main>
+            </el-container>
+        </el-container>
+    </div>
+</body>
+
+{% block vue%}{% endblock%}
+
+</html>

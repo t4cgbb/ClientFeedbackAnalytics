@@ -1,0 +1,544 @@
+{% extends 'layout.html' %}
+{% block main %}
+<el-row :gutter="20">
+  <el-col :span="4">
+    <!-- 店家選擇 -->
+    <el-select v-model="selectedStore" placeholder="店家選擇" style="width: 240px" size="large" @change="searchStore">
+      <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value"></el-option>
+    </el-select>
+  </el-col>
+  <el-col :span="6">
+    <!-- 時間選擇 -->
+    <span class="demo-date-picker"></span>
+    <span class="block">
+      <span class="demonstration"></span>
+      <el-date-picker v-model="selectedMonth" type="month" placeholder="選擇月份" size="large" value-format="YYYY-MM-DD"
+        @change="searchStore"></el-date-picker>
+    </span>
+  </el-col>
+  <el-col :span="6">
+    <!-- <el-button type="primary" @click="search">查詢資料</el-button> -->
+  </el-col>
+  <el-col :span="8">
+    <el-button type="primary">更新數據</el-button>
+  </el-col>
+</el-row>
+<!-- 上方統計數字 -->
+<el-row :gutter="16">
+  <el-col :span="8">
+    <div class="statistic-card">
+      <el-statistic :value="curRating" precision="1">
+        <template #title>
+          <div style="display: inline-flex; align-items: center">
+            目前星級
+            <el-tooltip effect="dark" content="Number of users who logged into the product in one day" placement="top">
+            </el-tooltip>
+          </div>
+        </template>
+      </el-statistic>
+      <div class="statistic-footer">
+        <div class="footer-item">
+          <span>比去年</span>
+          <span class="green">
+            [[ratingComparedToLastYear]]
+            <el-icon>
+              <CaretTop />
+            </el-icon>
+          </span>
+        </div>
+      </div>
+    </div>
+  </el-col>
+  <el-col :span="8">
+    <div class="statistic-card">
+      <el-statistic :value="totalPositiveReviews">
+        <template #title>
+          <div style="display: inline-flex; align-items: center">
+            總計好評
+            <el-tooltip effect="dark" content="Number of users who logged into the product in one month"
+              placement="top">
+            </el-tooltip>
+          </div>
+        </template>
+      </el-statistic>
+      <div class="statistic-footer">
+        <div class="footer-item">
+          <span>本月新增</span>
+          <span class="red">
+            [[newPositiveReviewsThisMonth]]
+            <el-icon>
+              <CaretBottom />
+            </el-icon>
+          </span>
+        </div>
+      </div>
+    </div>
+  </el-col>
+  <el-col :span="8">
+    <div class="statistic-card">
+      <el-statistic :value="totalNegativeReviews" title="New transactions today">
+        <template #title>
+          <div style="display: inline-flex; align-items: center">
+            總計負評
+          </div>
+        </template>
+      </el-statistic>
+      <div class="statistic-footer">
+        <div class="footer-item">
+          <span>本月新增</span>
+          <span class="red">
+            [[newNegativeReviewsThisMonth]]
+            <el-icon>
+              <CaretTop />
+            </el-icon>
+          </span>
+        </div>
+        <div class="footer-item">
+          <el-icon :size="14">
+            <ArrowRight />
+          </el-icon>
+        </div>
+      </div>
+    </div>
+  </el-col>
+</el-row>
+
+<el-row :gutter="20">
+  <el-col :span="4">
+    <!-- 好評關鍵字統計展示 -->
+    <el-table :data="keyWordDataP" height="250" :default-sort="{ prop: 'times', order: 'descending' }"
+      style="width: 100%">
+      <el-table-column prop="keywords" label="好評關鍵字" width="120"></el-table-column>
+      <el-table-column prop="keywordCount" label="次數" sortable width="90"></el-table-column>
+    </el-table>
+  </el-col>
+  <el-col :span="4">
+    <!-- 負評關鍵字統計展示 -->
+    <el-table :data="keyWordDataN" height="250" :default-sort="{ prop: 'times', order: 'descending' }"
+      style="width: 100%">
+      <el-table-column prop="keywords" label="負評關鍵字" width="120"></el-table-column>
+      <el-table-column prop="keywordCount" label="次數" sortable width="90"></el-table-column>
+    </el-table>
+  </el-col>
+  <el-col :span="6">
+    <!-- 文字雲-->
+    <!-- 文字雲圖片欄位(敬請期待) -->
+
+  </el-col>
+  <el-col :span="10">
+    <!-- 趨勢圖欄位 -->
+  </el-col>
+</el-row>
+<el-row :gutter="20">
+  <el-col :span="12">
+    <!-- 好評展示 -->
+    <el-table :data="reviewsDataP" :default-sort="{ prop: 'date', order: 'descending' }" height="250"
+      style="width: 100%">
+      <el-table-column prop="user_name" label="姓名" width="100"></el-table-column>
+      <el-table-column prop="date" label="日期" sortable width="120"></el-table-column>
+      <el-table-column prop="review_text" label="好評" width="500"></el-table-column>
+    </el-table>
+  </el-col>
+  <el-col :span="12">
+    <!-- 負評展示 -->
+    <el-table :data="reviewsDataN" height="250" :default-sort="{ prop: 'date', order: 'descending' }"
+      style="width: 100%">
+      <el-table-column prop="user_name" label="姓名" width="100"></el-table-column>
+      <el-table-column prop="date" label="日期" sortable width="120"></el-table-column>
+      <el-table-column prop="review_text" label="負評" width="500"></el-table-column>
+    </el-table>
+  </el-col>
+
+</el-row>
+
+
+{% endblock %}
+
+{% block vue%}
+<script lang="ts" setup>
+  // import { createApp, ref, onMounted, watch } from 'vue'; 
+  // import ElementPlus from 'element-plus'; 
+
+
+  // 從 Vue 宣告需要使用的 function 有哪些
+  const { createApp, ref, onMounted, watch } = Vue;
+  const { ElMessage } = ElementPlus;
+  const { Picture } = '@element-plus/icons-vue';
+  // import { Picture as IconPicture } from '@element-plus/icons-vue'
+
+
+  const app = createApp({
+    delimiters: ["[[", "]]"],
+    setup() {
+      // 當前選擇的日期（用ref是vue3專屬，目的是為了讓在程式語言中如果date改變，則頁面也會跟著刷新（安裝瀏覽器插件 vue devtool可看） 
+      // 當前選擇的月份，網頁開啟時預設為上個月分(在onMounted有設定)
+
+      // 當前選擇的月份
+      const selectedMonth = ref("")
+
+      // 當前選擇的店家 , 預設屏東民生
+      const selectedStore = ref("新上海美味鍋24H(屏東民生)")
+
+      // 店家選擇選單
+      const options = ref([])
+      const fetchStores = function () {
+        axios.get('/api/get_storelist')
+          .then(function (response) {
+            // 處理接收到的商店名稱數據
+            console.log('店家選單回應:', response.data)
+            options.value = response.data.options // 直接使用從後端獲取的 options
+          })
+          .catch(error => {
+            console.error("抓取Storelist錯誤", error)
+          });
+      }
+
+
+      // 當前選擇的評論類型 
+      const selectedCommentType = ref("好評");
+
+      // 好評評論表格資料
+      const ReviewData1Loading = ref(false)
+
+      // 評論統計版
+      const curRating = ref(0);
+      const ratingComparedToLastYear = ref(0)
+      const totalPositiveReviews = ref(0)
+      const newPositiveReviewsThisMonth = ref(0)
+      const totalNegativeReviews = ref(0)
+      const newNegativeReviewsThisMonth = ref(0)
+
+      const keyWordDataP = ref([])
+      const keyWordDataN = ref([])
+      const reviewsDataP = ref([])
+      const reviewsDataN = ref([])
+
+      // const clear = function () {
+      //   reviewsDataP.value = [];
+      // };
+
+      // 查評論資料
+      const getReviewData = function () {
+        // api查詢資料-詳細評論
+        axios.get('/api/reviews_data', {
+          params: {
+            published_date: selectedMonth.value,
+            place_name: selectedStore.value
+          }
+        })
+          .then(function (response) {
+            console.log(response.data)
+
+            reviewsDataP.value = []
+            reviewsDataN.value = []
+            reviewsDataP.value = response.data.positive
+            reviewsDataN.value = response.data.negative
+            // 資料結束載入
+            ReviewData1Loading.value = false;
+          })
+      }
+
+      // 查統計卡片資料
+      const getStaticsCard = function () {
+
+        // api查詢資料-記分板
+        axios.get('/api/statistic_card', {
+          params: {
+            place_name: selectedStore.value
+          }
+        })
+          .then(function (response) {
+            console.log('statistic_card:', response.data)
+            curRating.value = response.data.curRating
+            totalPositiveReviews.value = response.data.totalPositiveReviews
+            totalNegativeReviews.value = response.data.totalNegativeReviews
+          })
+      }
+
+      // 查統計卡片比對增加資料概況
+      const getStatisticsFooter = function () {
+        axios.get('/api/statistic_footer', {
+          params: {
+            published_date: selectedMonth.value,
+            place_name: selectedStore.value
+          }
+        })
+          .then(function (response) {
+            console.log('statistic_card:', response.data)
+            // curRating.value = response.data.curRating
+            newPositiveReviewsThisMonth.value = response.data.newPositiveReviewsThisMonth
+            newNegativeReviewsThisMonth.value = response.data.newNegativeReviewsThisMonth
+          })
+      }
+
+      // 查店家資料
+      const searchStore = function () {
+        // 一開始載入資料 
+        // ReviewData1Loading.value = true;
+
+        console.log("查詢月份 for:", selectedMonth.value)
+        console.log("查詢資料 for:", selectedStore.value);
+
+        // Api 查詢資料-關鍵字
+        axios.get('/api/get_shop_keywords', {
+          params: {
+            date: selectedMonth.value,
+            place_name: selectedStore.value
+          }
+        })
+          .then(function (response) {
+            // 查看後端回傳的資料
+            console.log(response.data)
+
+            keyWordDataP.value = []
+            keyWordDataN.value = []
+            keyWordDataP.value = response.data.positive;
+            keyWordDataN.value = response.data.negative;
+            // 資料結束載入
+            ReviewData1Loading.value = false;
+          })
+      }
+
+      //     setTimeout(() => {
+
+      //         ElMessage({
+      //             message: '資料查詢成功',
+      //             type: 'success',
+      //         })
+
+      //         // 清空資料，避免資料疊加
+      //         reviewsDataP.value = [];
+      //         ReviewsData2.value = [];
+
+      //         if (selectedStore.value === "P1") {
+      //             reviewsDataP.value.push(
+      //                 {
+      //                     name: "P1",
+      //                     date: "2024-04-20",
+      //                     reviews: "冰淇淋口味很多，環境也整潔乾淨",
+      //                 },
+      //                 {
+      //                     name: 'Andy',
+      //                     date: '2024-05-20',
+      //                     reviews: '好吃，推薦朋友來'
+      //                 },
+      //                 {
+      //                     name: 'Emma',
+      //                     date: '2024-04-21',
+      //                     reviews: '空間寬敞舒適'
+      //                 },
+      //             );
+      //             ReviewsData2.value.push(
+      //                 {
+      //                     name: "Paul",
+      //                     date: "2024-04-20",
+      //                     reviews: "蚊蟲很多，有夠噁心",
+      //                 },
+      //                 {
+      //                     name: 'Else',
+      //                     date: '2024-05-20',
+      //                     reviews: '晚班服務員態度有夠差，不知道欠他多少錢，不爽不要來上班'
+      //                 },
+      //                 {
+      //                     name: 'Ken',
+      //                     date: '2024-04-25',
+      //                     reviews: '等了半小時才上鍋，有夠久'
+      //                 },
+
+      //             );
+      //         }
+      //         else if (selectedStore.value === "P2") {
+      //             reviewsDataP.value.push({
+      //                 name: "P2",
+      //                 date: "2024-04-20",
+      //                 reviews: "空間寬敞舒適",
+      //             },
+      //             );
+      //         }
+
+      //         // 統計圖表數據
+      //         curRating.value = (Math.random() * 2 + 3).toFixed(1);
+      //         ratingComparedToLastYear.value = (Math.random() * 2).toFixed(1);
+      //         totalPositiveReviews.value = Math.floor(Math.random() * 300)
+      //         newPositiveReviewsThisMonth.value = Math.floor(Math.random() * 15)
+      //         totalNegativeReviews.value = Math.floor(Math.random() * 300)
+      //         newNegativeReviewsThisMonth.value = Math.floor(Math.random() * 15)
+      //         // 資料結束載入 
+      //         ReviewData1Loading.value = false;
+      //     }, 100);
+      // };
+
+      // watch(selectedStore);
+
+
+      // watch 是 vue3專屬用法，意思是監聽數據，像是監聽以下三個變數，假設selectedDate（日期）改變，像是從今天變成昨天，則會觸發更新資料的function 
+      // watch([selectedDate, selectedStore, selectedCommentType], () => { });
+
+      /** 
+       * 則是網頁程式入口點，一開始要執行的 function寫在這，像是這邊就再執行刷新圖表，讓圖表可以展現，如果未來要更新表格資料，跟後端請求也一樣要寫在這 
+       * 讓網頁一開始加載進來就可以取到資料，一樣放在變數裡面就可以了。 
+       **/
+
+      // 自動執行初始化操作
+      onMounted(() => {
+        // 取得今天日期
+        selectedMonth.value = moment().format('YYYY-MM-DD');
+        // selectedMonth.value = '2024-05-01';
+        // 找店家關鍵字資料
+        searchStore();
+        // 找評論資料
+        getReviewData();
+        // 找統計卡片資料
+        getStaticsCard();
+        // 找統計卡片比對資料
+        getStatisticsFooter();
+        // 店家選單資料
+        fetchStores();
+
+      });
+      // 監聽店家或月份變化
+      watch([selectedStore, selectedMonth], () => {
+        // 找評論資料
+        getReviewData();
+        // 找統計卡片資料
+        getStaticsCard();
+        // 找統計卡片比對資料
+        getStatisticsFooter();
+        // 店家選單資料
+        fetchStores();
+      });
+
+      return {
+        searchStore,
+        fetchStores,
+        selectedStore,
+        options,
+        // 日期相關
+        selectedMonth,
+        // 關鍵字
+        keyWordDataP,
+        keyWordDataN,
+        // 好評評論資料表格
+        reviewsDataP,
+        reviewsDataN,
+        ReviewData1Loading,
+        // 評論統計版
+        curRating,
+        ratingComparedToLastYear,
+        totalPositiveReviews,
+        newPositiveReviewsThisMonth,
+        totalNegativeReviews,
+        newNegativeReviewsThisMonth,
+      };
+    },
+  })
+
+  app.use(ElementPlus)
+
+  // 單獨一個匯入 
+  // app.component('User', ElementPlusIconsVue.User) 
+  // app._container._vnode.appContext.components.User 
+  // window.app = app 
+
+  // 全部一起匯入 
+  for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+    app.component(key, component)
+  }
+
+  app.mount("#app")
+
+
+
+</script>
+<style>
+  html {
+    height: 100%;
+  }
+
+  body {
+    padding: 0;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif, Hiragino Sans GB;
+  }
+
+  aside {
+    height: 100vh;
+
+  }
+
+  /* 讓測欄的邊線填滿 */
+  .tac .el-col .el-menu-vertical-demo {
+    height: 100vh;
+  }
+
+  .el-row {
+    margin-bottom: 50px;
+  }
+
+  .el-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .el-col {
+    border-radius: 4px;
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+
+  .el-table {
+    font-size: medium;
+
+  }
+
+  :global(h2#card-usage ~ .example .example-showcase) {
+    background-color: var(--el-fill-color) !important;
+  }
+
+  .el-statistic {
+    --el-statistic-content-font-size: 28px;
+
+  }
+
+  .statistic-card {
+    height: 100%;
+    padding: 20px;
+    border-radius: 4px;
+    background-color: var(--el-bg-color-overlay);
+  }
+
+  .statistic-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--el-text-color-regular);
+    margin-top: 16px;
+
+  }
+
+  .statistic-footer .footer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .statistic-footer .footer-item span:last-child {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+  }
+
+  .green {
+    color: var(--el-color-success);
+  }
+
+  .red {
+    color: var(--el-color-error);
+  }
+</style>
+
+{% endblock%}
